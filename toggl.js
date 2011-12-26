@@ -2,9 +2,12 @@
 var https = require('https'),
     querystring = require('querystring'),
     moment = require('moment'),
-    _ = require('underscore');
+    _ = require('underscore'),
+    fs = require('fs'),
+    EventEmitter = require('events').EventEmitter;
 
 var hourly_rates = {};
+var events = new EventEmitter();
 
 https.get({hostname: 'www.toggl.com',
            path: '/api/v6/projects.json?'+querystring.stringify({
@@ -19,6 +22,7 @@ https.get({hostname: 'www.toggl.com',
                       hourly_rates[project.id] = project.hourly_rate;
                   });
 
+                  events.emit('got_hourlies');
                   fetch();
               };
 
@@ -49,6 +53,8 @@ var fetch = function () {
               });
 };
 
+events.on('got_hourlies', fetch);
+
 var parse_data = function (data) {
     data = _.groupBy(JSON.parse(data).data.filter(function (e) { return !!e.project; }),
                      function (entry) {
@@ -59,9 +65,11 @@ var parse_data = function (data) {
         return hourly_rates[entry.project.id]*((new Date(entry.stop))-(new Date(entry.start)))/1000/60/60;
     };
 
-    console.log(_.keys(data).map(function(day) {
-        return [day, data[day].map(
+    data = _.keys(data).map(function(day) {
+        return ['2011-'+day, data[day].map(
             function (a) {return income(a);}).reduce(
                 function (a,b) {return a+b;})];
-    }));
+    });
+
+    fs.writeFile('./dataset/toggl.json', JSON.stringify(data), 'utf8');
 };
