@@ -1,0 +1,9 @@
+
+The basic idea:
+
+ - fetch toshl csv
+ - toggl.js script to fetch toggl data via api
+ - create dataset for regression
+ - run regression
+ - script that does all this periodically
+ - send email report every week
