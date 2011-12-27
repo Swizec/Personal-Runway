@@ -4,18 +4,20 @@ var fs = require('fs'),
     moment = require('moment'),
     EventEmitter = require('events').EventEmitter,
     http = require('http'),
+    https = require('https'),
     querystring = require('querystring'),
     secrets = require('./secrets');
 
 var events = new EventEmitter();
 
 var login = function () {
-    var req = http.request({host: 'toshl.com',
-                  path: '/login/',
-                  method: 'POST'},
-                 function (res) {
-                     events.emit('logged_in', res.headers['set-cookie']);
-                 });
+    var req = https.request({host: 'toshl.com',
+                             path: '/login/',
+                             method: 'POST',
+                             headers: {'Content-Type': 'application/x-www-form-urlencoded'}},
+                           function (res) {
+                               events.emit('logged_in', res.headers['set-cookie']);
+                           });
 
     req.write(querystring.stringify({
         email: secrets.toshl.email,
@@ -29,26 +31,18 @@ var login = function () {
 login();
 
 var fetch = function (cookies) {
-    console.log({host: 'toshl.com',
-                        path: '/export/',
-                        method: 'POST',
-                        headers: {Cookie: cookies[0]}});
-
-    var req = http.get({host: 'toshl.com',
-                        path: '/export/',
-                        method: 'POST',
-                        headers: {Cookie: cookies[0]}},
+    var req = http.request({host: 'toshl.com',
+                            path: '/export/',
+                            method: 'POST',
+                            headers: {Cookie: cookies[0].split(';')[0],
+                                      'Content-Type': 'application/x-www-form-urlencoded'}},
                       function (res) {
                           res.setEncoding('utf8');
                           var data = '';
 
-                          console.log(res.headers);
-                          console.log(res.statusCode);
-
                           var write = function () {
-                              console.log(data);
                               fs.writeFileSync('./dataset/toshl.csv', data, 'utf8');
-                              //events.emit('fetched');
+                              events.emit('fetched');
                           };
 
                           res.on('data', function (chunk) { data+=chunk;});
@@ -56,6 +50,7 @@ var fetch = function (cookies) {
                           res.on('close', write);
                       });
     req.write(querystring.stringify({
+        year: '2011',
         time: 'all',
         type: 'Text'
     }));
