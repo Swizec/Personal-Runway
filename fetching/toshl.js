@@ -6,7 +6,8 @@ var fs = require('fs'),
     http = require('http'),
     https = require('https'),
     querystring = require('querystring'),
-    secrets = require('./secrets');
+    secrets = require('./secrets'),
+    _ = require('underscore');
 
 var events = new EventEmitter();
 
@@ -59,6 +60,30 @@ var fetch = function (cookies) {
 
 events.on('logged_in', fetch);
 
+/*var matify = function (data) {
+    var
+    _.keys(data).map(function (key) {
+    });
+}*/
+
+var zeros = function (data) {
+    var years = [], _data = {};
+
+    _.keys(data).map(function (key) {
+        var _key = key.split('-'), year = _key[0];
+
+        if (years.indexOf(year) < 0) {
+            // leap year
+            var days = (year%400 == 0 || (year%4 == 0 && year%100 != 0)) ? 366 : 365;
+            for (var i=1; i<=days; _data[year+'-'+(i++)] = 0) {}
+            years.push(year);
+        }
+        _data[key] = data[key];
+    });
+
+    return _data;
+};
+
 var parse = function () {
     var parsed = {};
     csv().fromPath('../dataset/toshl.csv')
@@ -71,7 +96,10 @@ var parse = function () {
             parsed[day] = (parsed[day]) ? parsed[day]+val : val;
         })
         .on('end', function () {
+            parsed = zeros(parsed);
+            console.log(parsed);
             fs.writeFile('../dataset/toshl.json', JSON.stringify(parsed), 'utf8');
+            //fs.writeFile('../dataset/toshl.txt', matify(parsed), 'utf8');
         });
 };
 
