@@ -58,18 +58,29 @@ events.on('got_hourlies', fetch);
 var parse_data = function (data) {
     data = _.groupBy(JSON.parse(data).data.filter(function (e) { return !!e.project; }),
                      function (entry) {
-                         return moment(new Date(entry.start)).format('DDD');
+                         return moment(new Date(entry.start)).format('YYYY-DDD');
                      });
 
     var income = function (entry) {
         return hourly_rates[entry.project.id]*((new Date(entry.stop))-(new Date(entry.start)))/1000/60/60;
     };
 
-    data = _.keys(data).map(function(day) {
-        return ['2011-'+day, data[day].map(
+    var _data = {}, years = [];
+    _.keys(data).map(function(key) {
+        var year = key.split('-')[0];
+        if (years.indexOf(year) < 0) {
+            // leap year
+            var days = (year%400 == 0 || (year%4 == 0 && year%100 != 0)) ? 366 : 365;
+            for (var i=1; i<=days; _data[year+'-'+(i++)] = 0) {}
+            years.push(year);
+        }
+        _data[key] = data[key].map(
             function (a) {return income(a);}).reduce(
-                function (a,b) {return a+b;})];
+                function (a,b) {return a+b;});
     });
 
-    fs.writeFile('../dataset/toggl.json', JSON.stringify(data), 'utf8');
+    console.log(_data);
+
+    fs.writeFile('../dataset/toggl.json', JSON.stringify(_data), 'utf8');
+    fs.writeFile('../dataset/toggl.txt', JSON.stringify(_.values(_data).join('\r\n')), 'utf8');
 };
