@@ -60,16 +60,16 @@ var fetch = function (cookies) {
 
 events.on('logged_in', fetch);
 
-/*var matify = function (data) {
-    var
-    _.keys(data).map(function (key) {
-    });
-}*/
+var matify = function (data) {
+    return _.values(data).join('\r\n');
+}
 
-var zeros = function (data) {
+var fix_data = function (data) {
     var years = [], _data = {};
 
-    _.keys(data).map(function (key) {
+    _.keys(data).filter(function (key) {
+        return key.split('-')[0] >= 2011;
+    }).map(function (key) {
         var _key = key.split('-'), year = _key[0];
 
         if (years.indexOf(year) < 0) {
@@ -96,10 +96,10 @@ var parse = function () {
             parsed[day] = (parsed[day]) ? parsed[day]+val : val;
         })
         .on('end', function () {
-            parsed = zeros(parsed);
-            console.log(parsed);
+            parsed = fix_data(parsed);
+
             fs.writeFile('../dataset/toshl.json', JSON.stringify(parsed), 'utf8');
-            //fs.writeFile('../dataset/toshl.txt', matify(parsed), 'utf8');
+            fs.writeFile('../dataset/toshl.txt', matify(parsed), 'utf8');
         });
 };
 
