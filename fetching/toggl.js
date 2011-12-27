@@ -79,8 +79,6 @@ var parse_data = function (data) {
                 function (a,b) {return a+b;});
     });
 
-    console.log(_data);
-
     fs.writeFile('../dataset/toggl.json', JSON.stringify(_data), 'utf8');
-    fs.writeFile('../dataset/toggl.txt', JSON.stringify(_.values(_data).join('\r\n')), 'utf8');
+    fs.writeFile('../dataset/toggl.txt', _.values(_data).join('\r\n'), 'utf8');
 };
