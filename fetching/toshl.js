@@ -41,7 +41,7 @@ var fetch = function (cookies) {
                           var data = '';
 
                           var write = function () {
-                              fs.writeFileSync('./dataset/toshl.csv', data, 'utf8');
+                              fs.writeFileSync('../dataset/toshl.csv', data, 'utf8');
                               events.emit('fetched');
                           };
 
@@ -61,7 +61,7 @@ events.on('logged_in', fetch);
 
 var parse = function () {
     var parsed = {};
-    csv().fromPath('./dataset/toshl.csv')
+    csv().fromPath('../dataset/toshl.csv')
         .transform(function (row) {
             return [moment(new Date(row[0])).format('YYYY-DDD'),
                     row[2]];
@@ -71,7 +71,7 @@ var parse = function () {
             parsed[day] = (parsed[day]) ? parsed[day]+val : val;
         })
         .on('end', function () {
-            fs.writeFile('./dataset/toshl.json', JSON.stringify(parsed), 'utf8');
+            fs.writeFile('../dataset/toshl.json', JSON.stringify(parsed), 'utf8');
         });
 };
 
