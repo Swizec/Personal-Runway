@@ -17,14 +17,14 @@ store xs = writeFile "../dataset/toshl_predict.txt"
 expected :: (Fractional a) => [a] -> a
 expected xs = sum (map (* 0.25) xs)
 
-predict' :: (Fractional a) => [a] -> [a]
-predict' xs
-  | length xs <= width = [expected xs]
-  | otherwise          = (expected (take width xs)):predict' (tail xs)
-    where width = 5
+predict' :: (Fractional a) => Int -> Int -> [a] -> [a]
+predict' num now series
+  | num-now > 0 = predict' num (now+1) (expected (take width series):series)
+  | otherwise = series
+  where width = 7+now*2
 
-predict :: (Fractional a) => [a] -> [a]
-predict xs = predict' (smooth xs)
+predict :: (Fractional a) => Int -> [a] -> [a]
+predict n series = reverse (predict' n 0 (reverse series))
 
 --main = do
 --  lines <- readFile "../dataset/toshl.txt"

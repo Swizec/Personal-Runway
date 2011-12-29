@@ -6,7 +6,7 @@ m = length(toshl_Y);
 theta = zeros(2,1);
 
 averaged = imfilter(toshl_Y, fspecial('average', [7 1]));
-averaged = imfilter(averaged2, fspecial('average', [7 1]));
+averaged = imfilter(averaged, fspecial('average', [7 1]));
 
 averaged = load("../dataset/toshl_avg.txt");
 averaged2 = load("../dataset/toshl_predict.txt");
