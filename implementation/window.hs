@@ -14,13 +14,15 @@ store :: (Fractional a) => [a] -> IO ()
 store xs = writeFile "../dataset/toshl_predict.txt"
            (foldr (\x acc -> x++"\r\n"++acc) "" (map show xs))
 
-weights :: Int -> [Double]
+-- ((n-i)*2)/((n-1)*n)
+--weights :: (Fractional a) => Int -> [a]
 weights len =
   map (\i -> ((n-i)*2)/((n-1)*n)) [1.0..n]
     where n = len*1.0
 
 expected :: (Fractional a) => [a] -> a
-expected xs = sum (map (* 0.25) xs)
+--expected xs = sum $ map (\p -> fst p * snd p) $ zip (weights $ length xs) xs
+expected xs = head xs
 
 predict' :: (Fractional a) => Int -> Int -> [a] -> [a]
 predict' num now series
