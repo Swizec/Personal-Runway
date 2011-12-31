@@ -16,24 +16,24 @@ store xs = writeFile "../dataset/toshl_predict.txt"
 
 -- ((n-i)*2)/((n-1)*n)
 --weights :: (Fractional a) => Int -> [a]
-weights len =
+weights :: (Num b, Fractional b, Enum b) => b -> [b]
+weights n =
   map (\i -> ((n-i)*2)/((n-1)*n)) [1.0..n]
-    where n = len*1.0
+--    where n = len*1.0
 
-expected :: (Fractional a) => [a] -> a
---expected xs = sum $ map (\p -> fst p * snd p) $ zip (weights $ length xs) xs
-expected xs = head xs
+expected :: (Fractional a, Enum a) => [a] -> a
+expected xs = sum $ map (\(w,v) -> w*v) $ zip (weights $ fromIntegral $ length xs) xs
 
-predict' :: (Fractional a) => Int -> Int -> [a] -> [a]
+predict' :: (Fractional a, Enum a) => Int -> Int -> [a] -> [a]
 predict' num now series
   | num-now > 0 = predict' num (now+1) (expected (take width series):series)
   | otherwise = series
   where width = 7+now*2
 
-predict :: (Fractional a) => Int -> [a] -> [a]
+predict :: (Fractional a, Enum a) => Int -> [a] -> [a]
 predict n series = reverse (predict' n 0 (reverse series))
 
---main = do
+-- main = do
 --  lines <- readFile "../dataset/toshl.txt"
 --  store (predict (map (\x -> read x::Double)
 --                  (splitOn "\r\n" lines)))
