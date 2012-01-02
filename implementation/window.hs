@@ -10,10 +10,6 @@ smooth' (x:xs) =
 smooth :: (Fractional a) => [a] -> [a]
 smooth xs = reverse (smooth' (reverse xs))
 
-store :: (Fractional a) => [a] -> IO ()
-store xs = writeFile "../dataset/toshl_predict.txt"
-           (foldr (\x acc -> x++"\r\n"++acc) "" (map show xs))
-
 -- ((n-i)*2)/((n-1)*n)
 --weights :: (Fractional a) => Int -> [a]
 weights :: (Num b, Fractional b, Enum b) => b -> [b]
@@ -31,9 +27,11 @@ predict' num now series
   where width = 7+now*2
 
 predict :: (Fractional a, Enum a) => Int -> [a] -> [a]
-predict n series = reverse (predict' n 0 (reverse series))
+predict n series = reverse $ predict' n 0 (reverse $ smooth series)
 
--- main = do
---  lines <- readFile "../dataset/toshl.txt"
---  store (predict (map (\x -> read x::Double)
---                  (splitOn "\r\n" lines)))
+store :: (Fractional a) => [a] -> IO ()
+store xs = writeFile "../dataset/toshl_predict.txt"
+           (foldr (\x acc -> x++"\r\n"++acc) "" (map show xs))
+main = do
+  lines <- readFile "../dataset/toshl.txt"
+  store $ predict 10 $ map (\x -> read x::Double) (splitOn "\r\n" lines)
