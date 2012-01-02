@@ -11,7 +11,6 @@ smooth :: (Fractional a) => [a] -> [a]
 smooth xs = reverse (smooth' (reverse xs))
 
 -- ((n-i)*2)/((n-1)*n)
---weights :: (Fractional a) => Int -> [a]
 weights :: (Num b, Fractional b, Enum b) => b -> [b]
 weights n =
   map (\i -> ((n-i)*2)/((n-1)*n)) [1.0..n]
@@ -30,7 +29,7 @@ predict' num now series
   where width = 7+now*2
 
 predict :: (Fractional a, Enum a) => Int -> [a] -> [a]
-predict n series = reverse $ predict' n 0 (reverse $ smooth $ smooth series)
+predict n series = reverse $ predict' n 0 (reverse $ smooth series)
 
 store :: (Fractional a) => [a] -> IO ()
 store xs = writeFile "../dataset/toshl_predict.txt"
