@@ -16,7 +16,7 @@ size(averaged)
 size(predicted)
 
 plot(toshl_Y, '-b', averaged, '-r', predicted, '-g')
-axis([0 380])
+axis([300 396])
 
 %X = [ones(m,1), (1:1:m)'];
 
