@@ -30,7 +30,7 @@ https.get({hostname: 'www.toggl.com',
 
       res.on('data', function (chunk) { data+=chunk; });
               res.on('end', complete);
-              res.on('close', complete);
+             // res.on('close', complete);
           }).on('error', function (e) {
               console.log("Got error:", e.message);
           });
@@ -49,7 +49,7 @@ var fetch = function () {
 
                   res.on('data', function (chunk) { data += chunk; });
                   res.on('end', function () {parse_data(data);});
-                  res.on('close', function () {parse_data(data);});
+                //  res.on('close', function () {parse_data(data);});
               }).on('error', function (e) {
                   console.log("Got error:", e.message);
               });

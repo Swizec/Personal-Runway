@@ -51,7 +51,7 @@ var fetch = function (cookies) {
 
                           res.on('data', function (chunk) { data+=chunk;});
                           res.on('end', write);
-                          res.on('close', write);
+                       //   res.on('close', write);
                       });
     req.write(querystring.stringify({
         year: '2011',
