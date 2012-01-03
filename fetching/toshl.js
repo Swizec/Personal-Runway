@@ -9,6 +9,9 @@ var fs = require('fs'),
     secrets = require('./secrets'),
     _ = require('underscore');
 
+
+exports.fetch_data = function (Callback) {
+
 var events = new EventEmitter();
 
 var login = function () {
@@ -42,7 +45,7 @@ var fetch = function (cookies) {
                           var data = '';
 
                           var write = function () {
-                              fs.writeFileSync('../dataset/toshl.csv', data, 'utf8');
+                              fs.writeFileSync('./dataset/toshl.csv', data, 'utf8');
                               events.emit('fetched');
                           };
 
@@ -62,7 +65,7 @@ events.on('logged_in', fetch);
 
 var matify = function (data) {
     return _.values(data).join('\r\n');
-}
+};
 
 var fix_data = function (data) {
     var years = [], _data = {};
@@ -86,7 +89,7 @@ var fix_data = function (data) {
 
 var parse = function () {
     var parsed = {};
-    csv().fromPath('../dataset/toshl.csv')
+    csv().fromPath('./dataset/toshl.csv')
         .transform(function (row) {
             return [moment(new Date(row[0])).format('YYYY-DDD'),
                     row[2]];
@@ -98,9 +101,13 @@ var parse = function () {
         .on('end', function () {
             parsed = fix_data(parsed);
 
-            fs.writeFile('../dataset/toshl.json', JSON.stringify(parsed), 'utf8');
-            fs.writeFile('../dataset/toshl.txt', matify(parsed), 'utf8');
+            Callback(parsed);
+
+     //       fs.writeFile('../dataset/toshl.json', JSON.stringify(parsed), 'utf8');
+     //       fs.writeFile('../dataset/toshl.txt', matify(parsed), 'utf8');
         });
 };
 
 events.on('fetched', parse);
+
+};

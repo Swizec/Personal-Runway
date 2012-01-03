@@ -6,6 +6,8 @@ var https = require('https'),
     fs = require('fs'),
     EventEmitter = require('events').EventEmitter;
 
+exports.fetch_data = function (Callback) {
+
 var hourly_rates = {};
 var events = new EventEmitter();
 
@@ -79,6 +81,10 @@ var parse_data = function (data) {
                 function (a,b) {return a+b;});
     });
 
-    fs.writeFile('../dataset/toggl.json', JSON.stringify(_data), 'utf8');
-    fs.writeFile('../dataset/toggl.txt', _.values(_data).join('\r\n'), 'utf8');
+    Callback(_data);
+
+//    fs.writeFile('../dataset/toggl.json', JSON.stringify(_data), 'utf8');
+//    fs.writeFile('../dataset/toggl.txt', _.values(_data).join('\r\n'), 'utf8');
+};
+
 };
