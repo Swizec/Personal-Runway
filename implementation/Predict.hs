@@ -1,4 +1,8 @@
 
+module Predict (
+predict
+) where
+
 import Data.List.Split
 
 smooth' :: (Fractional a) => [a] -> [a]
