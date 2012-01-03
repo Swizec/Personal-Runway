@@ -43,7 +43,7 @@ var fetch = function () {
               },
               function (res) {
                   res.setEncoding('utf8');
-              var data = '';
+                  var data = '';
 
                   res.on('data', function (chunk) { data += chunk; });
                   res.on('end', function () {parse_data(data);});

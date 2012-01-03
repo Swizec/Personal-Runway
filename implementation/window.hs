@@ -1,11 +1,12 @@
 
 import Data.List.Split
+import System.Environment
 
 smooth' :: (Fractional a) => [a] -> [a]
 smooth' [] = []
 smooth' (x:xs) =
   (sum w)/fromIntegral (length w):smooth' xs
-    where w = x:(take 3 xs)
+    where w = x:(take 2 xs)
 
 smooth :: (Fractional a) => [a] -> [a]
 smooth xs = reverse (smooth' (reverse xs))
@@ -31,10 +32,11 @@ predict' num now series
 predict :: (Fractional a, Enum a) => Int -> [a] -> [a]
 predict n series = reverse $ predict' n 0 (reverse $ smooth series)
 
-store :: (Fractional a) => [a] -> IO ()
-store xs = writeFile "../dataset/toshl_predict.txt"
+store :: (Fractional a) => String -> [a] -> IO ()
+store path xs = writeFile path
            (foldr (\x acc -> x++"\r\n"++acc) "" (map show xs))
 
 main = do
-  lines <- readFile "../dataset/toshl.txt"
-  store $ predict 31 $ map (\x -> read x::Double) (splitOn "\r\n" lines)
+  args <- getArgs
+  lines <- readFile (args!!0)
+  store (args!!2) $ predict (read (args!!1)::Int)  $ map (\x -> read x::Double) (splitOn "\r\n" lines)
