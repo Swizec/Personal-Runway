@@ -6,10 +6,13 @@
 
 var toggl = require('./fetching/toggl'),
     toshl = require('./fetching/toshl'),
+    secrets = require('./secrets'),
     moment = require('moment'),
     EventEmitter = require('events').EventEmitter,
     _ = require('underscore'),
+    spawn = require('child_process').spawn,
     mongodb = require('mongodb'),
+    email = require('mailer'),
     mongo = new mongodb.Db('personal-runway', new mongodb.Server('127.0.0.1', 27017, {}));
 
 var Data = {toshl: false,
@@ -70,6 +73,7 @@ var replay_events = function (mongo, data, last) {
     var metas = new mongodb.Collection(mongo, 'meta');
     metas.insert({time: new Date(),
                   amount: new_amount});
+    return new_amount;
 };
 
 emitter.on('fetched', function () {
@@ -81,9 +85,46 @@ emitter.on('fetched', function () {
 
         mongo.open(function (err) {
             store_deltas(mongo, data);
-            replay_events(mongo, data, last);
+            var money = replay_events(mongo, data, last);
+
+            emitter.emit("replayed", money);
 
             mongo.close();
         });
     });
 });
+
+emitter.on('replayed', function (money) {
+    var predict = spawn('./implementation/in_fortnight', [money]);
+    predict.stdin.end();
+    predict.stdout.on('data', function (data) {
+        emitter.emit('predicted', parseFloat((data+"").split("\n")[0]));
+    });
+});
+
+emitter.on('predicted', function (prediction) {
+    mail({to: 'swizec@swizec.com',
+          subject: "Money prediction",
+          template: "emails/fortnight_prediction.txt",
+          data: {prediction: prediction}},
+         function () {
+             console.log("Sent.");
+         });
+});
+
+function mail (info, callback) {
+    email.send(
+        {host: "smtp.sendgrid.net",
+         port : "25",
+         domain: "smtp.sendgrid.net",
+         authentication: "login",
+         username: secrets.sendgrid.user,
+         password: secrets.sendgrid.pass,
+         to : info.to,
+         from : "swizec@swizec.com",
+         template: info.template,
+         data: info.data,
+         subject : info.subject
+        },
+        callback);
+}
