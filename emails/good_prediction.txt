@@ -1,0 +1,13 @@
+
+<p>Hey present Swizec,</p>
+
+<p>if you keep going like this you will have</p>
+
+<p style="font-size: 2.5em; font-weight: bold; color: #33db12">{{prediction}}€</p>
+
+<p>in two weeks!</p>
+
+<p style="font-size: 1.5em;">Keep up the good work! :D</p>
+
+<p>Cheers,<br />
+~Future Swizec</p>

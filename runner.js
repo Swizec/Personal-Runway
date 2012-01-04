@@ -104,9 +104,9 @@ emitter.on('replayed', function (money) {
 
 emitter.on('predicted', function (prediction) {
     mail({to: 'swizec@swizec.com',
-          subject: "Money prediction",
-          template: "emails/fortnight_prediction.txt",
-          data: {prediction: prediction}},
+          subject: (prediction < 0) ? "Fuck, money!" : "Yay money \\o/",
+          template: (prediction < 0) ? "emails/bad_prediction.txt" : "emails/good_prediction.txt",
+          data: {prediction: Math.round(prediction)}},
          function () {
              console.log("Sent.");
          });
