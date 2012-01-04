@@ -32,5 +32,6 @@ predict' num now series
   | otherwise = series
   where width = 7+now*2
 
+-- left is earliest
 predict :: (Fractional a, Enum a) => Int -> [a] -> [a]
 predict n series = reverse $ predict' n 0 (reverse $ smooth series)

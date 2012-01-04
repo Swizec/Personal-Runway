@@ -12,8 +12,18 @@ main = do
   print e
 
 run = do
-  allMetas >>= printDocs "All Metas"
+  -- left is latest
+  deltas <- lastDeltas 30
 
-allMetas = rest =<< find (select [] "meta") {sort = ["time" =: -1]}
+  let toggl = predict 14 $ reverse $ floatify (series "+" deltas)
+  let toshl = predict 14 $ reverse $ floatify (series "-" deltas)
+
+  -- last 14 are predictions
+
+lastDeltas n = rest =<< find (select [] "deltas") {sort = ["day" =: -1]} {limit = n}
 
 printDocs title docs = liftIO $ putStrLn title >> mapM_ (print . exclude ["_id"]) docs
+
+series field docs = map (valueAt field) docs
+
+floatify xs = map (\x -> read x::Float) $ map show xs
