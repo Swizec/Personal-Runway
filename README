@@ -1,4 +1,3 @@
-
 The basic idea:
 
  - fetch toshl csv
@@ -7,3 +6,18 @@ The basic idea:
  - run regression
  - script that does all this periodically
  - send email report every week
+
+
+# Running it
+
+To use this you will need
+- node.js
+- mongodb
+- haskell
+- a Toshl account
+- a Toggl account
+- a sendgrid account
+
+Put everything into a directory. Fill in your sendgrid data in ./secrets.js, then fill out your Toggl and Toshl data in ./fetching/secrets.js
+
+After that you just need to set up a cronjob to run ./runner.js every X days (I think 3 days is a good choice)
