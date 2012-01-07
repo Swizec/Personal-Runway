@@ -98,14 +98,27 @@ emitter.on('replayed', function (money) {
     var predict = spawn('./implementation/in_fortnight', [money]);
     predict.stdin.end();
     predict.stdout.on('data', function (data) {
-        emitter.emit('predicted', parseFloat((data+"").split("\n")[0]));
+        emitter.emit('predicted', money, parseFloat((data+"").split("\n")[0]));
     });
 });
 
-emitter.on('predicted', function (prediction) {
+emitter.on('predicted', function (now, prediction) {
+    var subject = "", template = "";
+
+    if (prediction > now) {
+        subject = "Yay, money \\o/";
+        template = "emails/good_prediction.txt";
+    }else  if (prediction < 0) {
+        subject = "Fuck, money!";
+        template = "emails/bad_prediction.txt";
+    }else{
+        subject = "Yay ... money?";
+        template = "emails/lukewarm_prediction.txt";
+    }
+
     mail({to: 'swizec@swizec.com',
-          subject: (prediction < 0) ? "Fuck, money!" : "Yay money \\o/",
-          template: (prediction < 0) ? "emails/bad_prediction.txt" : "emails/good_prediction.txt",
+          subject: subject,
+          template: template,
           data: {prediction: Math.round(prediction)}},
          function () {
              console.log("Sent.");
