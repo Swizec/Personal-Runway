@@ -78,7 +78,7 @@ var fix_data = function (data) {
         if (years.indexOf(year) < 0) {
             // leap year
             var days = (year%400 == 0 || (year%4 == 0 && year%100 != 0)) ? 366 : 365;
-            for (var i=1; i<=days; _data[year+'-'+(i++)] = 0) {}
+            for (var i=1; i<=days; _data[year+'-'+(i++)] = {'-': 0, '+': 0}) {}
             years.push(year);
         }
         _data[key] = data[key];
@@ -92,14 +92,23 @@ var parse = function () {
     csv().fromPath('./dataset/toshl.csv')
         .transform(function (row) {
             return [moment(new Date(row[0])).format('YYYY-DDD'),
-                    row[2]];
+                    row[2],
+                    row[3]];
         })
         .on('data', function (row) {
-            var day = row[0], val = parseFloat(row[1]);
-            parsed[day] = (parsed[day]) ? parsed[day]+val : val;
+            var day = row[0],
+                expense = parseFloat(row[1]) || 0,
+                income = parseFloat(row[2]) || 0;
+            if (parsed[day]) {
+                parsed[day]['-'] += expense;
+                parsed[day]['+'] += income;
+            }else{
+                parsed[day] = {'-': expense, '+': income};
+            }
         })
         .on('end', function () {
             parsed = fix_data(parsed);
+            console.log(parsed);
 
             Callback(parsed);
 

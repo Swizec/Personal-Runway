@@ -55,8 +55,8 @@ var extract_data = function (last) {
             });
     return  keys.map(function (k) {
         return {'day': moment(k, "YYYY-DDD")['_d'],
-                '+': Data.toggl[k],
-                '-': Data.toshl[k]};
+                '+': Data.toggl[k]+Data.toshl[k]['+'],
+                '-': Data.toshl[k]['-']};
     });
 };
 
@@ -78,6 +78,8 @@ var replay_events = function (mongo, data, last) {
 
 emitter.on('fetched', function () {
     if (!(Data.toshl && Data.toggl)) return;
+
+    return;
 
     last_known_state(function (last) {
 

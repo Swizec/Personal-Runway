@@ -2,3 +2,4 @@ secrets.js
 *.o
 *.hi
 implementation/svm_approach
+dataset/*
