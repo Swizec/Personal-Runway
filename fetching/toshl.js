@@ -35,11 +35,11 @@ var login = function () {
 login();
 
 var fetch = function (cookies) {
-    var req = http.request({host: 'toshl.com',
-                            path: '/export/',
-                            method: 'POST',
-                            headers: {Cookie: cookies[0].split(';')[0],
-                                      'Content-Type': 'application/x-www-form-urlencoded'}},
+    var req = https.request({host: 'toshl.com',
+                             path: '/export/',
+                             method: 'POST',
+                             headers: {Cookie: cookies[0].split(';')[0],
+                                       'Content-Type': 'application/x-www-form-urlencoded'}},
                       function (res) {
                           res.setEncoding('utf8');
                           var data = '';
