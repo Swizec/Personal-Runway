@@ -108,7 +108,6 @@ var parse = function () {
         })
         .on('end', function () {
             parsed = fix_data(parsed);
-            console.log(parsed);
 
             Callback(parsed);
 

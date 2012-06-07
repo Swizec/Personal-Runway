@@ -77,8 +77,9 @@ var parse_data = function (data) {
             years.push(year);
         }
         _data[key] = data[key].map(
-            function (a) {return income(a);}).reduce(
-                function (a,b) {return a+b;});
+            function (a) {return income(a);}).filter(
+                function (a) {return a>=0;}).reduce(
+                    function (a,b) {return a+b;}, 0);
     });
 
     Callback(_data);
