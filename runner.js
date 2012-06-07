@@ -79,8 +79,6 @@ var replay_events = function (mongo, data, last) {
 emitter.on('fetched', function () {
     if (!(Data.toshl && Data.toggl)) return;
 
-    return;
-
     last_known_state(function (last) {
 
         var data = extract_data(last);
