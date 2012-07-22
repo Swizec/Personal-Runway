@@ -4,14 +4,25 @@ var https = require('https'),
     moment = require('moment'),
     _ = require('underscore'),
     fs = require('fs'),
-    EventEmitter = require('events').EventEmitter;
+    EventEmitter = require('events').EventEmitter,
+    fx = require('money'),
+    rates = require('./rates');
 
 exports.fetch_data = function (Callback) {
 
 var hourly_rates = {};
 var events = new EventEmitter();
 
-https.get({hostname: 'www.toggl.com',
+rates.fetch(function (err, data) {
+    if (err) throw err;
+
+    fx.base = data.base;
+    fx.rates = data.rates;
+    events.emit('got_rates');
+});
+
+var hourlies = function () {
+    https.get({hostname: 'www.toggl.com',
            path: '/api/v6/projects.json?'+querystring.stringify({
            }),
            auth: require('./secrets').toggl_api+':api_token'
@@ -21,7 +32,9 @@ https.get({hostname: 'www.toggl.com',
               var data = '';
               var complete = function () {
                   JSON.parse(data).data.map(function (project) {
-                      hourly_rates[project.id] = project.hourly_rate;
+                      hourly_rates[project.id] = fx.convert(project.hourly_rate,
+                                                            {from:'USD',
+                                                             to: 'EUR'});
                   });
 
                   events.emit('got_hourlies');
@@ -34,6 +47,9 @@ https.get({hostname: 'www.toggl.com',
           }).on('error', function (e) {
               console.log("Got error:", e.message);
           });
+};
+
+events.on('got_rates', hourlies);
 
 var fetch = function () {
     https.get({hostname: 'www.toggl.com',

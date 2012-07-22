@@ -7,12 +7,22 @@ var fs = require('fs'),
     https = require('https'),
     querystring = require('querystring'),
     secrets = require('./secrets'),
-    _ = require('underscore');
+    _ = require('underscore'),
+    fx = require('money'),
+    rates = require('./rates');
 
 
 exports.fetch_data = function (Callback) {
 
 var events = new EventEmitter();
+
+rates.fetch(function (err, data) {
+    if (err) throw err;
+
+    fx.base = data.base;
+    fx.rates = data.rates;
+    events.emit('got_rates');
+});
 
 var login = function () {
     var req = https.request({host: 'toshl.com',
@@ -32,7 +42,7 @@ var login = function () {
 
 };
 
-login();
+events.on('got_rates', login);
 
 var fetch = function (cookies) {
     var req = https.request({host: 'toshl.com',
@@ -93,12 +103,18 @@ var parse = function () {
         .transform(function (row) {
             return [moment(new Date(row[0])).format('YYYY-DDD'),
                     row[2],
-                    row[3]];
+                    row[3],
+                    row[4]];
         })
         .on('data', function (row) {
             var day = row[0],
                 expense = parseFloat(row[1]) || 0,
-                income = parseFloat(row[2]) || 0;
+                income = parseFloat(row[2]) || 0,
+                currency = row[3];
+            if (currency.length <= 3 && currency != 'EUR') {
+                expense = fx.convert(expense, {from: currency, to: 'EUR'});
+                income = fx.convert(income, {from: currency, to: 'EUR'});
+            }
             if (parsed[day]) {
                 parsed[day]['-'] += expense;
                 parsed[day]['+'] += income;
