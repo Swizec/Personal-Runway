@@ -16,10 +16,17 @@ import Control.Monad.Trans (liftIO)
 lastDeltas from n = rest =<< find (select ["day" Database.MongoDB.=:
                                            ["$gte" Database.MongoDB.=: from]]
                                    "deltas")
-                                  {sort = ["day" Database.MongoDB.=: 1]}
-known_point _ = rest =<< find (select [] "meta")
+                                   {sort = ["day" Database.MongoDB.=: 1]}
+
+known_point count
+  | count > 10 = rest =<< find (select [] "meta")
                          {sort = ["time" Database.MongoDB.=: -1]}
                          {skip = 10} {limit = 1}
+  | otherwise = rest =<< find (select [] "meta")
+                         {sort = ["time" Database.MongoDB.=: -1]}
+                         {skip = count} {limit = 1}
+
+count_meta = count (select [] "meta")
 
 float::Label -> Document -> Double
 float field x =
@@ -79,14 +86,17 @@ main = do
   print e
 
 run = do
-  known <- known_point 5
+  count <- count_meta
+  known <- known_point (fromIntegral count-1)
+
+  liftIO $ print count
 
   let from = fst $ known' known
   let money = snd $ known' known
 
   deltas <- lastDeltas from 30
 
-  liftIO $ renderableToPNGFile (toRenderable $ chart $ snd $ simulate money deltas) 640 480 "dataset/graph.png"
+--  liftIO $ renderableToPNGFile (toRenderable $ chart $ snd $ simulate money deltas) 640 480 "dataset/graph.png"
 
   liftIO $ putStrLn "done"
 
