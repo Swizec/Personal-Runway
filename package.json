@@ -10,7 +10,9 @@
   "dependencies": {
     "money": "",
     "superagent": "",
-    "csv": ""
+    "csv": "",
+    "moment": "",
+    "mongo": ""
   },
   "devDependencies": {},
   "optionalDependencies": {},

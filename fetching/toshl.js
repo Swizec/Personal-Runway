@@ -99,7 +99,8 @@ var fix_data = function (data) {
 
 var parse = function () {
     var parsed = {};
-    csv().fromPath('./dataset/toshl.csv')
+    csv()
+        .fromPath('./dataset/toshl.csv')
         .transform(function (row) {
             return [moment(new Date(row[0])).format('YYYY-DDD'),
                     row[2],
@@ -112,6 +113,8 @@ var parse = function () {
                 income = parseFloat(row[2]) || 0,
                 currency = row[3];
             if (currency.length <= 3 && currency != 'EUR') {
+                if (currency == 'km') currency = 'BAM'; // this is a hack
+
                 expense = fx.convert(expense, {from: currency, to: 'EUR'});
                 income = fx.convert(income, {from: currency, to: 'EUR'});
             }
