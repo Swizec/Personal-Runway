@@ -86,7 +86,7 @@ run = do
 
   deltas <- lastDeltas from 30
 
-  liftIO $ renderableToPNGFile (toRenderable $ chart $ snd $ simulate money deltas) 640 480 "test.png"
+  liftIO $ renderableToPNGFile (toRenderable $ chart $ snd $ simulate money deltas) 640 480 "dataset/graph.png"
 
   liftIO $ putStrLn "done"
 
