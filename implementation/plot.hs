@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings, ExtendedDefaultRules #-}
 
 import Data.Time.Calendar
+import Data.Time.Clock
 import Data.Time.LocalTime
 import Data.Colour.Names
 import Data.Colour
@@ -51,9 +52,9 @@ float::Label -> Document -> Float
 float field x =
   (read . show . (valueAt field)) x ::Float
 
-points::[Document] -> [(Value, Float, Float)]
+points::[Document] -> [(Maybe UTCTime, Float, Float)]
 points docs =
-  map (\doc -> (valueAt "day" doc, float "+" doc, float "-" doc)) docs
+  map (\doc -> (cast' $ valueAt "day" doc, float "+" doc, float "-" doc)) docs
 
 
 
