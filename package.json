@@ -12,8 +12,9 @@
     "superagent": "",
     "csv": "",
     "moment": "",
-    "mongo": "",
-    "mailer": ""
+    "mongodb": "",
+    "mailer": "",
+    "underscore": ""
   },
   "devDependencies": {},
   "optionalDependencies": {},
