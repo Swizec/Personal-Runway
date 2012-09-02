@@ -13,6 +13,7 @@ var toggl = require('./fetching/toggl'),
     spawn = require('child_process').spawn,
     mongodb = require('mongodb'),
     email = require('mailer'),
+    fs = require('fs'),
     mongo = new mongodb.Db('personal-runway', new mongodb.Server('127.0.0.1', 27017, {}));
 
 var Data = {toshl: false,
@@ -103,6 +104,19 @@ emitter.on('replayed', function (money) {
 });
 
 emitter.on('predicted', function (now, prediction) {
+    console.log("meow!");
+    var graph = spawn('./implementation/plot');
+    graph.stdin.end();
+    graph.stderr.on('data', function (data) {
+        console.log("ERROR", data+'');
+    });
+    graph.stdout.on('data', function () {
+        console.log("GRAPHED");
+        emitter.emit('graphed', now, prediction);
+    });
+});
+
+emitter.on('graphed', function (now, prediction) {
     var subject = "", template = "";
 
     if (prediction > now) {
@@ -119,13 +133,17 @@ emitter.on('predicted', function (now, prediction) {
     mail({to: 'swizec@swizec.com',
           subject: subject,
           template: template,
-          data: {prediction: Math.round(prediction)}},
+          data: {prediction: Math.round(prediction)},
+          attachments: [{filename: 'graph.png',
+                         contents: fs.readFileSync('./dataset/graph.png')}]},
          function () {
              console.log("Sent.");
          });
 });
 
 function mail (info, callback) {
+    console.log("MAILING");
+    console.log(info);
     email.send(
         {host: "smtp.sendgrid.net",
          port : "25",
@@ -137,7 +155,8 @@ function mail (info, callback) {
          from : "swizec@swizec.com",
          template: info.template,
          data: info.data,
-         subject : info.subject
+         subject : info.subject,
+         attachments: info.attachments
         },
         callback);
 }
