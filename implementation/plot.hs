@@ -48,29 +48,58 @@ lastDeltas n = rest =<< find (select [] "deltas") {sort = ["day" Database.MongoD
 series field docs = map ((\x -> read x::Float) . show . (valueAt field))
                          docs
 
-float::Label -> Document -> Float
+float::Label -> Document -> Double
 float field x =
-  (read . show . (valueAt field)) x ::Float
+  (read . show . (valueAt field)) x ::Double
 
-points::[Document] -> [(Maybe UTCTime, Float, Float)]
+points::[Document] -> [(Maybe UTCTime, Double, Double)]
 points docs =
   map (\doc -> (cast' $ valueAt "day" doc, float "+" doc, float "-" doc)) docs
 
+date'::Int -> Int -> Int -> LocalTime
+date' dd mm yyyy = (LocalTime (fromGregorian (fromIntegral yyyy) mm dd) midnight)
 
+date::Maybe UTCTime -> LocalTime
+date Nothing = date' 1 1 1970
+date (Just d) = utcToLocalTime utc d
+
+chart docs = layout
+  where
+    income = plot_lines_style .> line_color ^= opaque blue
+           $ plot_lines_values ^= [[ (date d, p) | (d, p, m) <- points docs]]
+           $ plot_lines_title ^= "Income"
+           $ defaultPlotLines
+
+    expense = plot_lines_style .> line_color ^= opaque green
+           $ plot_lines_values ^= [[ (date d, m) | (d, p, m) <- points docs]]
+           $ plot_lines_title ^= "Expense"
+           $ defaultPlotLines
+
+    layout = layout1_title ^="Money History"
+           $ layout1_left_axis ^: laxis_override ^= axisGridHide
+           $ layout1_right_axis ^: laxis_override ^= axisGridHide
+           $ layout1_bottom_axis ^: laxis_override ^= axisGridHide
+           $ layout1_plots ^= [Left (toPlot income),
+                                     Right (toPlot expense)]
+           $ layout1_grid_last ^= False
+           $ defaultLayout1
 
 main = do
-  args <- getArgs
   pipe <- runIOE $ connect (host "127.0.0.1")
-  e <- access pipe master "personal-runway" (run (read (args!!0)::Float))
+  e <- access pipe master "personal-runway" run
   close pipe
   print e
 
-run current  = do
+run = do
   deltas <- lastDeltas 30
 
   --let points = zip (series "+" deltas) (series "-" deltas)
 
-  liftIO $ putStrLn $ show $ points deltas
+  liftIO $ renderableToPNGFile (toRenderable $ chart deltas) 640 480 "test.png"
+
+  liftIO $ putStrLn "done"
+
+--  liftIO $ putStrLn $ show $ points deltas
 
 
 simulate money toggl toshl =
