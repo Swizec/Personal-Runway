@@ -12,7 +12,8 @@
     "superagent": "",
     "csv": "",
     "moment": "",
-    "mongo": ""
+    "mongo": "",
+    "mailer": ""
   },
   "devDependencies": {},
   "optionalDependencies": {},
