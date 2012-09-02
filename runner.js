@@ -104,14 +104,12 @@ emitter.on('replayed', function (money) {
 });
 
 emitter.on('predicted', function (now, prediction) {
-    console.log("meow!");
     var graph = spawn('./implementation/plot');
     graph.stdin.end();
     graph.stderr.on('data', function (data) {
         console.log("ERROR", data+'');
     });
     graph.stdout.on('data', function () {
-        console.log("GRAPHED");
         emitter.emit('graphed', now, prediction);
     });
 });
@@ -142,8 +140,6 @@ emitter.on('graphed', function (now, prediction) {
 });
 
 function mail (info, callback) {
-    console.log("MAILING");
-    console.log(info);
     email.send(
         {host: "smtp.sendgrid.net",
          port : "25",
