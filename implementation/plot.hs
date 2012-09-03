@@ -63,7 +63,7 @@ chart points = layout
   where
     moneys = plot_lines_style .> line_color ^= opaque blue
            $ plot_lines_values ^= [[ (d, v) | (d, v) <- points]]
-           $ plot_lines_title ^= "Income"
+           $ plot_lines_title ^= "Outstanding+real money"
            $ defaultPlotLines
 
     layout = layout1_title ^="Money History"
