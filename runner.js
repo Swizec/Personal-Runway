@@ -28,7 +28,7 @@ toggl.fetch_data(function (data) {
     emitter.emit('fetched');
 });
 
-toshl.fetch_data(function (data) {
+toshl.fetch_data(function (err, data) {
     console.log("toshl'd");
     if (Data.toshl) return;
     Data.toshl = data;

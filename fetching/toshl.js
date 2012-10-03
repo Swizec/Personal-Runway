@@ -128,7 +128,7 @@ var parse = function () {
         .on('end', function () {
             parsed = fix_data(parsed);
 
-            Callback(parsed);
+            Callback(null, parsed);
 
      //       fs.writeFile('../dataset/toshl.json', JSON.stringify(parsed), 'utf8');
      //       fs.writeFile('../dataset/toshl.txt', matify(parsed), 'utf8');
