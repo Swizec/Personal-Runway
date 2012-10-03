@@ -13,6 +13,7 @@ describe('Rate fetch', function () {
 
             data.should.have.property('rates');
             data.should.have.property('base').equal('USD');
+            data.should.not.have.property('_warning');
 
             done();
         });
