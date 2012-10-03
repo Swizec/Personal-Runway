@@ -21,7 +21,7 @@ var Data = {toshl: false,
 
 var emitter = new EventEmitter();
 
-toggl.fetch_data(function (data) {
+toggl.fetch_data(function (err, data) {
     console.log("toggl'd");
     if (Data.toggl) return;
     Data.toggl = data;
