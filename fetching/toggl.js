@@ -55,10 +55,20 @@ var hourlies = function (callback) {
             var hourly_rates = {};
 
             res.body.data.map(function (project) {
-                          hourly_rates[project.id] = fx.convert(project.hourly_rate,
-                                                            {from:'USD',
-                                                             to: 'EUR'});
-                      });
+                var fee, max_hours = null;
+                if (project.is_fixed_fee) {
+                    fee = project.fixed_fee/(project.estimated_workhours || 0) || 0;
+                    
+                    max_hours = project.estimated_workhours;                    
+                }else{
+                    fee = project.hourly_rate;
+                }
+
+                hourly_rates[project.id] = {rate: fx.convert(fee,
+                                                             {from: 'USD',
+                                                              to: 'EUR'}),
+                                            max_h: max_hours};
+            });
             callback(null, hourly_rates);
         });
 
@@ -90,7 +100,16 @@ var parse_data = function (hourly_rates, data, callback) {
                      });
 
     var income = function (entry) {
-        return hourly_rates[entry.project.id]*((new Date(entry.stop))-(new Date(entry.start)))/1000/60/60;
+        var hours = ((new Date(entry.stop))-(new Date(entry.start)))/1000/60/60,
+            earned = 0;
+
+        if (hourly_rates[entry.project.id].max_h > 0) {
+            earned = hourly_rates[entry.project.id].rate*hours;
+        }
+
+        hourly_rates[entry.project.id].max_h -= hours;
+
+        return earned;
     };
 
     var _data = {}, years = [];
