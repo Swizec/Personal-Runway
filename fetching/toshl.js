@@ -12,25 +12,44 @@ var fs = require('fs'),
     rates = require('./rates');
 
 
-exports.fetch_data = function (Callback) {
+exports.fetch_data = function (callback) {
 
-var events = new EventEmitter();
+    exchange_rates(function (err) {
+        if (err) return callback(err);
 
-rates.fetch(function (err, data) {
-    if (err) throw err;
+        login(function (err, cookies) {
+            if (err) return callback(err);
+            
+            fetch(cookies, function (err, data) {
+                if (err) return callback(err);
 
-    fx.base = data.base;
-    fx.rates = data.rates;
-    events.emit('got_rates');
-});
+                parse(function (err, data) {
+                    callback(err, data);
+                });
+            });
+        });
+    });
 
-var login = function () {
+};
+
+var exchange_rates = function (callback) {
+    rates.fetch(function (err, data) {
+        if (err) return callback(err);
+
+        fx.base = data.base;
+        fx.rates = data.rates;
+
+        callback(null);
+    });
+};
+
+var login = function (callback) {
     var req = https.request({host: 'toshl.com',
                              path: '/login/',
                              method: 'POST',
                              headers: {'Content-Type': 'application/x-www-form-urlencoded'}},
                            function (res) {
-                               events.emit('logged_in', res.headers['set-cookie']);
+                               callback(null, res.headers['set-cookie']);
                            });
 
     req.write(querystring.stringify({
@@ -42,9 +61,7 @@ var login = function () {
 
 };
 
-events.on('got_rates', login);
-
-var fetch = function (cookies) {
+var fetch = function (cookies, callback) {
     var req = https.request({host: 'toshl.com',
                              path: '/export/',
                              method: 'POST',
@@ -56,7 +73,8 @@ var fetch = function (cookies) {
 
                           var write = function () {
                               fs.writeFileSync('./dataset/toshl.csv', data, 'utf8');
-                              events.emit('fetched');
+                              
+                              callback(null);
                           };
 
                           res.on('data', function (chunk) { data+=chunk;});
@@ -70,8 +88,6 @@ var fetch = function (cookies) {
     }));
     req.end();
 };
-
-events.on('logged_in', fetch);
 
 var matify = function (data) {
     return _.values(data).join('\r\n');
@@ -97,7 +113,7 @@ var fix_data = function (data) {
     return _data;
 };
 
-var parse = function () {
+var parse = function (callback) {
     var parsed = {};
     csv()
         .fromPath('./dataset/toshl.csv')
@@ -128,13 +144,6 @@ var parse = function () {
         .on('end', function () {
             parsed = fix_data(parsed);
 
-            Callback(null, parsed);
-
-     //       fs.writeFile('../dataset/toshl.json', JSON.stringify(parsed), 'utf8');
-     //       fs.writeFile('../dataset/toshl.txt', matify(parsed), 'utf8');
+            callback(null, parsed);
         });
-};
-
-events.on('fetched', parse);
-
 };
