@@ -5,6 +5,7 @@ var https = require('https'),
     _ = require('underscore'),
     fs = require('fs'),
     fx = require('money'),
+    request = require('superagent'),
     rates = require('./rates');
 
 exports.fetch_data = function (callback) {
@@ -40,60 +41,50 @@ var exchange_rates = function (callback) {
 };
 
 var hourlies = function (callback) {
-    var hourly_rates = {};
 
-    https.get({hostname: 'www.toggl.com',
-               path: '/api/v6/projects.json?'+querystring.stringify({
-               }),
-               auth: require('./secrets').toggl_api+':api_token'
-              },
-              function (res) {
-                  res.setEncoding('utf8');
-                  var data = '';
-                  var complete = function () {
-                      JSON.parse(data).data.map(function (project) {
+    request.get({protocol: 'https',
+                 hostname: 'www.toggl.com',
+                 pathname: '/api/v6/projects.json',
+                 query: {},
+                 auth: require('./secrets').toggl_api+':api_token'})
+        .set('Accept-Charset', 'utf-8')
+        .set('Accept', 'application/json')
+        .end(function (err, res) {
+            if (err) return callback(err);
+
+            var hourly_rates = {};
+
+            res.body.data.map(function (project) {
                           hourly_rates[project.id] = fx.convert(project.hourly_rate,
                                                             {from:'USD',
                                                              to: 'EUR'});
                       });
-                      
-                      callback(null, hourly_rates);
-                  };
+            callback(null, hourly_rates);
+        });
 
-                  res.on('data', function (chunk) { data+=chunk; });
-                  res.on('end', complete);
-                  // res.on('close', complete);
-              }).on('error', function (e) {
-                  console.log("Got error:", e.message);
-                  callback(e);
-              });
 };
 
 
 var fetch = function (callback) {
-    https.get({hostname: 'www.toggl.com',
-               path: '/api/v6/time_entries.json?'+querystring.stringify({
-                   start_date: (new Date('2011-09-01')).toISOString(),
-                   end_date: (new Date()).toISOString()
-               }),
-               auth: require('./secrets').toggl_api+':api_token'
-              },
-              function (res) {
-                  res.setEncoding('utf8');
-                  var data = '';
 
-                  res.on('data', function (chunk) { data += chunk; });
-                  res.on('end', function () {
-                      callback(null, data);
-                  });
-              }).on('error', function (e) {
-                  console.log("Got error:", e.message);
-                  callback(e);
-              });
+    request.get({protocol: 'https',
+                 hostname: 'www.toggl.com',
+                 pathname: '/api/v6/time_entries.json',
+                 query: {
+                     start_date: (new Date('2011-09-01')).toISOString(),
+                     end_date: (new Date()).toISOString()
+                 },
+                 auth: require('./secrets').toggl_api+':api_token'})
+        .set('Accept-Charset', 'utf-8')
+        .set('Accept', 'application/json')
+        .end(function (err, res) {
+            callback(err, res.body);
+        });
+
 };
 
 var parse_data = function (hourly_rates, data, callback) {
-    data = _.groupBy(JSON.parse(data).data.filter(function (e) { return !!e.project; }),
+    data = _.groupBy(data.data.filter(function (e) { return !!e.project; }),
                      function (entry) {
                          return moment(new Date(entry.start)).format('YYYY-DDD');
                      });

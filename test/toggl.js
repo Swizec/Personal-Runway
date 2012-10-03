@@ -7,6 +7,7 @@ var toggl = require('../fetching/toggl');
 
 describe('toggl fetching', function () {
 
+    // this is a simple integration test
     it('should fetch data', function (done) {
         
         toggl.fetch_data(function (err, data) {
