@@ -23,7 +23,7 @@ exports.fetch_data = function (callback) {
             fetch(cookies, function (err, data) {
                 if (err) return callback(err);
 
-                parse(function (err, data) {
+                parse(data, function (err, data) {
                     callback(err, data);
                 });
             });
@@ -72,9 +72,7 @@ var fetch = function (cookies, callback) {
                           var data = '';
 
                           var write = function () {
-                              fs.writeFileSync('./dataset/toshl.csv', data, 'utf8');
-                              
-                              callback(null);
+                              callback(null, data);
                           };
 
                           res.on('data', function (chunk) { data+=chunk;});
@@ -113,10 +111,10 @@ var fix_data = function (data) {
     return _data;
 };
 
-var parse = function (callback) {
+var parse = function (data, callback) {
     var parsed = {};
     csv()
-        .fromPath('./dataset/toshl.csv')
+        .from(data)
         .transform(function (row) {
             return [moment(new Date(row[0])).format('YYYY-DDD'),
                     row[2],
