@@ -2,8 +2,7 @@
 var fs = require('fs'),
     csv = require('csv'),
     moment = require('moment'),
-    EventEmitter = require('events').EventEmitter,
-    http = require('http'),
+    request = require('superagent'),
     https = require('https'),
     querystring = require('querystring'),
     secrets = require('./secrets'),
@@ -58,7 +57,6 @@ var login = function (callback) {
     }));
 
     req.end();
-
 };
 
 var fetch = function (cookies, callback) {
