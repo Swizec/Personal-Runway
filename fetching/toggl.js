@@ -4,83 +4,112 @@ var https = require('https'),
     moment = require('moment'),
     _ = require('underscore'),
     fs = require('fs'),
-    EventEmitter = require('events').EventEmitter,
     fx = require('money'),
+    request = require('superagent'),
     rates = require('./rates');
 
-exports.fetch_data = function (Callback) {
+exports.fetch_data = function (callback) {
 
-var hourly_rates = {};
-var events = new EventEmitter();
+    exchange_rates(function (err) {
+        if (err) return callback(err);
 
-rates.fetch(function (err, data) {
-    if (err) throw err;
+        hourlies(function (err, hourly_rates) {
+            if (err) return callback(err);
+            
+            fetch(function (err, data) {
+                if (err) return callback(err);
 
-    fx.base = data.base;
-    fx.rates = data.rates;
-    events.emit('got_rates');
-});
+                parse_data(hourly_rates, data, function (err, parsed) {
+                    if (err) return callback(err);
 
-var hourlies = function () {
-    https.get({hostname: 'www.toggl.com',
-           path: '/api/v6/projects.json?'+querystring.stringify({
-           }),
-           auth: require('./secrets').toggl_api+':api_token'
-          },
-          function (res) {
-              res.setEncoding('utf8');
-              var data = '';
-              var complete = function () {
-                  JSON.parse(data).data.map(function (project) {
-                      hourly_rates[project.id] = fx.convert(project.hourly_rate,
-                                                            {from:'USD',
-                                                             to: 'EUR'});
-                  });
-
-                  events.emit('got_hourlies');
-                  fetch();
-              };
-
-      res.on('data', function (chunk) { data+=chunk; });
-              res.on('end', complete);
-             // res.on('close', complete);
-          }).on('error', function (e) {
-              console.log("Got error:", e.message);
-          });
+                    callback(null, parsed);
+                });
+            });
+        });
+    });
 };
 
-events.on('got_rates', hourlies);
+var exchange_rates = function (callback) {
+    rates.fetch(function (err, data) {
+        if (err) return callback(err);
 
-var fetch = function () {
-    https.get({hostname: 'www.toggl.com',
-               path: '/api/v6/time_entries.json?'+querystring.stringify({
-                   start_date: (new Date('2011-09-01')).toISOString(),
-                   end_date: (new Date()).toISOString()
-               }),
-               auth: require('./secrets').toggl_api+':api_token'
-              },
-              function (res) {
-                  res.setEncoding('utf8');
-                  var data = '';
+        fx.base = data.base;
+        fx.rates = data.rates;
 
-                  res.on('data', function (chunk) { data += chunk; });
-                  res.on('end', function () {parse_data(data);});
-                //  res.on('close', function () {parse_data(data);});
-              }).on('error', function (e) {
-                  console.log("Got error:", e.message);
-              });
+        callback(null);
+    });
 };
 
-events.on('got_hourlies', fetch);
+var hourlies = function (callback) {
 
-var parse_data = function (data) {
-    data = _.groupBy(JSON.parse(data).data.filter(function (e) { return !!e.project; }),
+    request.get({protocol: 'https',
+                 hostname: 'www.toggl.com',
+                 pathname: '/api/v6/projects.json',
+                 query: {},
+                 auth: require('./secrets').toggl_api+':api_token'})
+        .set('Accept-Charset', 'utf-8')
+        .set('Accept', 'application/json')
+        .end(function (err, res) {
+            if (err) return callback(err);
+
+            var hourly_rates = {};
+
+            res.body.data.map(function (project) {
+                var fee, max_hours = null;
+                if (project.is_fixed_fee) {
+                    fee = project.fixed_fee/(project.estimated_workhours || 0) || 0;
+                    
+                    max_hours = project.estimated_workhours;                    
+                }else{
+                    fee = project.hourly_rate;
+                }
+
+                hourly_rates[project.id] = {rate: fx.convert(fee,
+                                                             {from: 'USD',
+                                                              to: 'EUR'}),
+                                            max_h: max_hours};
+            });
+            callback(null, hourly_rates);
+        });
+
+};
+
+
+var fetch = function (callback) {
+
+    request.get({protocol: 'https',
+                 hostname: 'www.toggl.com',
+                 pathname: '/api/v6/time_entries.json',
+                 query: {
+                     start_date: (new Date('2011-09-01')).toISOString(),
+                     end_date: (new Date()).toISOString()
+                 },
+                 auth: require('./secrets').toggl_api+':api_token'})
+        .set('Accept-Charset', 'utf-8')
+        .set('Accept', 'application/json')
+        .end(function (err, res) {
+            callback(err, res.body);
+        });
+
+};
+
+var parse_data = function (hourly_rates, data, callback) {
+    data = _.groupBy(data.data.filter(function (e) { return !!e.project; }),
                      function (entry) {
                          return moment(new Date(entry.start)).format('YYYY-DDD');
                      });
 
     var income = function (entry) {
-        return hourly_rates[entry.project.id]*((new Date(entry.stop))-(new Date(entry.start)))/1000/60/60;
+        var hours = ((new Date(entry.stop))-(new Date(entry.start)))/1000/60/60,
+            earned = 0;
+
+        if (hourly_rates[entry.project.id].max_h > 0) {
+            earned = hourly_rates[entry.project.id].rate*hours;
+        }
+
+        hourly_rates[entry.project.id].max_h -= hours;
+
+        return earned;
     };
 
     var _data = {}, years = [];
@@ -98,10 +127,5 @@ var parse_data = function (data) {
                     function (a,b) {return a+b;}, 0);
     });
 
-    Callback(_data);
-
-//    fs.writeFile('../dataset/toggl.json', JSON.stringify(_data), 'utf8');
-//    fs.writeFile('../dataset/toggl.txt', _.values(_data).join('\r\n'), 'utf8');
-};
-
+    callback(null, _data);
 };

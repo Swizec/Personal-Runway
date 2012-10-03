@@ -21,14 +21,14 @@ var Data = {toshl: false,
 
 var emitter = new EventEmitter();
 
-toggl.fetch_data(function (data) {
+toggl.fetch_data(function (err, data) {
     console.log("toggl'd");
     if (Data.toggl) return;
     Data.toggl = data;
     emitter.emit('fetched');
 });
 
-toshl.fetch_data(function (data) {
+toshl.fetch_data(function (err, data) {
     console.log("toshl'd");
     if (Data.toshl) return;
     Data.toshl = data;
