@@ -14,7 +14,9 @@
     "moment": "",
     "mongodb": "",
     "mailer": "",
-    "underscore": ""
+    "underscore": "",
+    "mocha": "",
+    "chai": ""
   },
   "devDependencies": {},
   "optionalDependencies": {},
