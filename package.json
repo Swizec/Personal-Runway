@@ -2,7 +2,7 @@
   "author": "Swizec <swizec@swizec.com> (http://swizec.com)",
   "name": "Personal-Runway",
   "description": "A project that can predict how much money you will have in two weeks.",
-  "version": "0.0.0",
+  "version": "0.3.0",
   "repository": {
     "type": "git",
     "url": "git://github.com/Swizec/Personal-Runway.git"
