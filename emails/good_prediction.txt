@@ -11,3 +11,5 @@
 
 <p>Cheers,<br />
 ~Future Swizec</p>
+
+<p>PS: I think you currently have {{now}}€</p>

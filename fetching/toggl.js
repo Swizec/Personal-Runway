@@ -9,7 +9,6 @@ var https = require('https'),
     rates = require('./rates');
 
 exports.fetch_data = function (callback) {
-
     exchange_rates(function (err) {
         if (err) return callback(err);
 
@@ -55,20 +54,24 @@ var hourlies = function (callback) {
             var hourly_rates = {};
 
             res.body.data.map(function (project) {
-                var fee, max_hours = null;
+                var fee, rate = {};
+
+                hourly_rates[project.id] = {};
+
                 if (project.is_fixed_fee) {
                     fee = project.fixed_fee/(project.estimated_workhours || 0) || 0;
                     
-                    max_hours = project.estimated_workhours;                    
+                    rate['max_h'] = project.estimated_workhours;                    
                 }else{
                     fee = project.hourly_rate;
                 }
 
-                hourly_rates[project.id] = {rate: fx.convert(fee,
-                                                             {from: 'USD',
-                                                              to: 'EUR'}),
-                                            max_h: max_hours};
+                rate['rate'] = fx.convert(fee,
+                                         {from: 'USD',
+                                          to: 'EUR'});
+                hourly_rates[project.id] = rate;
             });
+
             callback(null, hourly_rates);
         });
 
@@ -81,7 +84,7 @@ var fetch = function (callback) {
                  hostname: 'www.toggl.com',
                  pathname: '/api/v6/time_entries.json',
                  query: {
-                     start_date: (new Date('2011-09-01')).toISOString(),
+                     start_date: (new Date('2012-09-01')).toISOString(),
                      end_date: (new Date()).toISOString()
                  },
                  auth: require('./secrets').toggl_api+':api_token'})
@@ -100,11 +103,12 @@ var parse_data = function (hourly_rates, data, callback) {
                      });
 
     var income = function (entry) {
-        var hours = ((new Date(entry.stop))-(new Date(entry.start)))/1000/60/60,
-            earned = 0;
+        var hours = entry.duration/3600,
+            earned = 0,
+            rate = hourly_rates[entry.project.id];
 
-        if (hourly_rates[entry.project.id].max_h > 0) {
-            earned = hourly_rates[entry.project.id].rate*hours;
+        if (!rate.max_h || rate.max_h > 0) {
+            earned = rate.rate*hours;
         }
 
         hourly_rates[entry.project.id].max_h -= hours;
