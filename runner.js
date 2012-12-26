@@ -131,7 +131,8 @@ emitter.on('graphed', function (now, prediction) {
     mail({to: 'swizec@swizec.com',
           subject: subject,
           template: template,
-          data: {prediction: Math.round(prediction)},
+          data: {prediction: Math.round(prediction),
+                 now: Math.round(now)},
           attachments: [{filename: 'graph.png',
                          contents: fs.readFileSync('./dataset/graph.png')}]},
          function () {
