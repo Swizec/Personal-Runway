@@ -121,9 +121,10 @@ var parse = function (data, callback) {
         })
         .on('data', function (row) {
             var day = row[0],
-                expense = parseFloat(row[1]) || 0,
-                income = parseFloat(row[2]) || 0,
+                expense = parseFloat(row[1].replace(',', '')) || 0,
+                income = parseFloat(row[2].replace(',', '')) || 0,
                 currency = row[3];
+            
             if (currency.length <= 3 && currency != 'EUR') {
                 if (currency == 'km') currency = 'BAM'; // this is a hack
 
