@@ -114,16 +114,20 @@ var parse = function (data, callback) {
     csv()
         .from(data)
         .transform(function (row) {
-            return [moment(new Date(row[0])).format('YYYY-DDD'),
-                    row[2],
-                    row[3],
-                    row[4]];
+            // Date, Tags, Expense amount, Income amount, Currency, Amount in main currency, Main currency, Description
+            if (row[0] == 'Date') {
+                return null;
+            }
+            return {day: moment(new Date(row[0])).format('YYYY-DDD'),
+                    income: row[2],
+                    expense: row[3],
+                    currency: row[4]};
         })
-        .on('data', function (row) {
-            var day = row[0],
-                expense = parseFloat(row[1].replace(',', '')) || 0,
-                income = parseFloat(row[2].replace(',', '')) || 0,
-                currency = row[3];
+        .on('record', function (row) {
+            var day = row.day,
+                expense = parseFloat(row.income.replace(',', '')) || 0,
+                income = parseFloat(row.expense.replace(',', '')) || 0,
+                currency = row.currency;
             
             if (currency.length <= 3 && currency != 'EUR') {
                 if (currency == 'km') currency = 'BAM'; // this is a hack
@@ -142,5 +146,9 @@ var parse = function (data, callback) {
             parsed = fix_data(parsed);
 
             callback(null, parsed);
+        })
+        .on('error', function (error) {
+            console.log(error);
+            callback(error);
         });
 };
