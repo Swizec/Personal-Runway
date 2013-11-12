@@ -39,8 +39,29 @@ var exchange_rates = function (callback) {
     });
 };
 
-var hourlies = function (callback) {
+var __request = function (url, query, callback) {
+    callback = arguments[arguments.length-1];
+    query = typeof query === 'function' ? {} : query;
 
+    request.get({protocol: 'https',
+                 hostname: 'www.toggl.com',
+                 pathname: url,
+                 query: query,
+                 auth: require('./secrets').toggl_api+':api_token'})
+        .set('Accept-Charset', 'utf-8')
+        .set('Accept', 'application/json')
+        .end(callback);
+};
+
+var workspaces = function (callback) {
+    request.get({protocol: 'https',
+                 hostname: 'www.toggl.com',
+                 pathname: '/api/v8/workspaces',
+                 query: {},
+                 auth: 
+};
+
+var projects = function (workspaces, callback) {
     request.get({protocol: 'https',
                  hostname: 'www.toggl.com',
                  pathname: '/api/v6/projects.json',
@@ -48,16 +69,23 @@ var hourlies = function (callback) {
                  auth: require('./secrets').toggl_api+':api_token'})
         .set('Accept-Charset', 'utf-8')
         .set('Accept', 'application/json')
-        .end(function (err, res) {
+        .end(callback);
+};
+
+var hourlies = function (callback) {
+    workspaces(function (err, res) {
+        if (err) return callback(err);
+
+        projects(res, function (err, res) {
             if (err) return callback(err);
-
+            
             var hourly_rates = {};
-
+            
             res.body.data.map(function (project) {
                 var fee, rate = {};
-
+                
                 hourly_rates[project.id] = {};
-
+                
                 if (project.is_fixed_fee) {
                     fee = project.fixed_fee/(project.estimated_workhours || 0) || 0;
                     
@@ -65,16 +93,16 @@ var hourlies = function (callback) {
                 }else{
                     fee = project.hourly_rate;
                 }
-
+                
                 rate['rate'] = fx.convert(fee,
-                                         {from: 'USD',
-                                          to: 'EUR'});
+                                          {from: 'USD',
+                                           to: 'EUR'});
                 hourly_rates[project.id] = rate;
             });
-
+            
             callback(null, hourly_rates);
         });
-
+    });
 };
 
 
