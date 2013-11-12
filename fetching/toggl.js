@@ -15,7 +15,7 @@ exports.fetch_data = function (callback) {
 
         hourlies(function (err, hourly_rates) {
             if (err) return callback(err);
-            
+
             fetch(function (err, data) {
                 if (err) return callback(err);
 
@@ -81,26 +81,17 @@ var hourlies = function (callback) {
 
             var hourly_rates = {};
             
-            projects.map(function (project) {
-                var fee, rate = {};
-                
+            projects.forEach(function (project) {
+                var fee, rate = {};                
                 hourly_rates[project.id] = {};
-                
-                if (project.is_fixed_fee) {
-                    console.log("FIXED FEE");
-                    fee = project.fixed_fee/(project.estimated_workhours || 0) || 0;
-                    
-                    rate['max_h'] = project.estimated_workhours;                    
-                }else{
-                    fee = project.hourly_rate;
-                }
-                
-                rate['rate'] = fx.convert(fee,
+
+                rate['max_h'] = project.estimated_hours;                
+                rate['rate'] = fx.convert(project.rate,
                                           {from: 'USD',
                                            to: 'EUR'});
                 hourly_rates[project.id] = rate;
             });
-            
+
             callback(null, hourly_rates);
         });
     });
@@ -108,7 +99,6 @@ var hourlies = function (callback) {
 
 
 var fetch = function (callback) {
-
     request.get({protocol: 'https',
                  hostname: 'www.toggl.com',
                  pathname: '/api/v6/time_entries.json',
