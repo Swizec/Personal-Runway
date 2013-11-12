@@ -6,6 +6,7 @@ var https = require('https'),
     fs = require('fs'),
     fx = require('money'),
     request = require('superagent'),
+    async = require('async'),
     rates = require('./rates');
 
 exports.fetch_data = function (callback) {
@@ -54,39 +55,39 @@ var __request = function (url, query, callback) {
 };
 
 var workspaces = function (callback) {
-    request.get({protocol: 'https',
-                 hostname: 'www.toggl.com',
-                 pathname: '/api/v8/workspaces',
-                 query: {},
-                 auth: 
+    __request('/api/v8/workspaces', callback);
 };
 
 var projects = function (workspaces, callback) {
-    request.get({protocol: 'https',
-                 hostname: 'www.toggl.com',
-                 pathname: '/api/v6/projects.json',
-                 query: {},
-                 auth: require('./secrets').toggl_api+':api_token'})
-        .set('Accept-Charset', 'utf-8')
-        .set('Accept', 'application/json')
-        .end(callback);
+    async.map(workspaces,
+              function (workspace, callback) {
+                  __request('/api/v8/workspaces/'+workspace.id+'/projects', callback);
+              },
+              function (err, projects) {
+                  if (err) return callback(err);
+
+                  callback(null, projects.reduce(function (acc, project) { 
+                      return acc.concat(project.body);
+                  }, []));
+              });
 };
 
 var hourlies = function (callback) {
     workspaces(function (err, res) {
         if (err) return callback(err);
 
-        projects(res, function (err, res) {
+        projects(res.body, function (err, projects) {
             if (err) return callback(err);
-            
+
             var hourly_rates = {};
             
-            res.body.data.map(function (project) {
+            projects.map(function (project) {
                 var fee, rate = {};
                 
                 hourly_rates[project.id] = {};
                 
                 if (project.is_fixed_fee) {
+                    console.log("FIXED FEE");
                     fee = project.fixed_fee/(project.estimated_workhours || 0) || 0;
                     
                     rate['max_h'] = project.estimated_workhours;                    

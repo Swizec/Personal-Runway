@@ -16,7 +16,8 @@
     "mailer": "",
     "underscore": "",
     "mocha": "",
-    "chai": ""
+    "chai": "",
+    "async": ""
   },
   "devDependencies": {},
   "optionalDependencies": {},
