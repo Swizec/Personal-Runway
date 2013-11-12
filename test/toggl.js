@@ -13,7 +13,7 @@ describe('toggl fetching', function () {
         toggl.fetch_data(function (err, data) {
             
             var Y = new Date().getFullYear();
-            for (var i=1; i<=366; i++) {
+            for (var i=1; i<=365; i++) {
                 data.should.have.property(Y+'-'+i);
             }
 

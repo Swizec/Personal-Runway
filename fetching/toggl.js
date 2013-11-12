@@ -22,6 +22,8 @@ exports.fetch_data = function (callback) {
                 parse_data(hourly_rates, data, function (err, parsed) {
                     if (err) return callback(err);
 
+                    console.log(parsed);
+                    
                     callback(null, parsed);
                 });
             });
@@ -99,38 +101,34 @@ var hourlies = function (callback) {
 
 
 var fetch = function (callback) {
-    request.get({protocol: 'https',
-                 hostname: 'www.toggl.com',
-                 pathname: '/api/v6/time_entries.json',
-                 query: {
-                     start_date: (new Date('2012-09-01')).toISOString(),
-                     end_date: (new Date()).toISOString()
-                 },
-                 auth: require('./secrets').toggl_api+':api_token'})
-        .set('Accept-Charset', 'utf-8')
-        .set('Accept', 'application/json')
-        .end(function (err, res) {
-            callback(err, res.body);
-        });
-
+    __request('/api/v8/time_entries',
+              {
+                  start_date: (new Date('2012-09-01')).toISOString(),
+                  end_date: (new Date()).toISOString()
+              },
+              function (err, res) {
+                  callback(err, res.body);
+              });
 };
 
 var parse_data = function (hourly_rates, data, callback) {
-    data = _.groupBy(data.data.filter(function (e) { return !!e.project; }),
+    data = _.groupBy(data.filter(function (e) { return !!e.pid; }),
                      function (entry) {
                          return moment(new Date(entry.start)).format('YYYY-DDD');
                      });
 
+    console.log(data);
+
     var income = function (entry) {
         var hours = entry.duration/3600,
             earned = 0,
-            rate = hourly_rates[entry.project.id];
+            rate = hourly_rates[entry.pid];
 
         if (!rate.max_h || rate.max_h > 0) {
             earned = rate.rate*hours;
         }
 
-        hourly_rates[entry.project.id].max_h -= hours;
+        hourly_rates[entry.pid].max_h -= hours;
 
         return earned;
     };
