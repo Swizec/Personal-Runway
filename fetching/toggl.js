@@ -22,8 +22,6 @@ exports.fetch_data = function (callback) {
                 parse_data(hourly_rates, data, function (err, parsed) {
                     if (err) return callback(err);
 
-                    console.log(parsed);
-                    
                     callback(null, parsed);
                 });
             });
@@ -116,8 +114,6 @@ var parse_data = function (hourly_rates, data, callback) {
                      function (entry) {
                          return moment(new Date(entry.start)).format('YYYY-DDD');
                      });
-
-    console.log(data);
 
     var income = function (entry) {
         var hours = entry.duration/3600,
