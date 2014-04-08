@@ -119,12 +119,14 @@ var parse_data = function (hourly_rates, data, callback) {
         var hours = entry.duration/3600,
             earned = 0,
             rate = hourly_rates[entry.pid];
+    
+        if (rate) {
+            if (!rate.max_h || rate.max_h > 0) {
+                earned = rate.rate*hours;
+            }
 
-        if (!rate.max_h || rate.max_h > 0) {
-            earned = rate.rate*hours;
+            hourly_rates[entry.pid].max_h -= hours;
         }
-
-        hourly_rates[entry.pid].max_h -= hours;
 
         return earned;
     };
