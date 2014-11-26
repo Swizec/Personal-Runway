@@ -101,7 +101,7 @@ var hourlies = function (callback) {
 var fetch = function (callback) {
     __request('/api/v8/time_entries',
               {
-                  start_date: (new Date('2013-09-01')).toISOString(),
+                  start_date: (new Date('2014-09-01')).toISOString(),
                   end_date: (new Date()).toISOString()
               },
               function (err, res) {
